@@ -1,0 +1,317 @@
+<!--  Define la ruta URL para acceder a esta página (será accesible en /productos)-->
+@page "/usuario"  
+<!--  Importa el espacio de nombres para trabajar con listas y colecciones -->
+@using System.Collections.Generic  
+@using System.Text.Json  
+<!--  Importa el espacio de nombres para trabajar con JSON -->
+@using Services 
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Linq 
+@using System.Text
+
+
+@inject NavigationManager Navigation
+<!--  Importa el espacio de nombres donde se encuentra el ServicioEntidad-->
+@inject ServicioEntidad servicioEntidad  
+<!--  Inyecta el servicio que se comunicará con la API ServicioEntidad -->
+@inject NavigationManager navegacionManager  
+<!--  Inyecta el servicio para manejar la navegación entre páginas ServicioEntidad-->
+
+
+<PageTitle>Usuarios</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
+
+<h1>Usuarios</h1>  <!-- Encabezado principal de la página -->
+
+<div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal("ejemplo@ejemplo.com", "", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+</div>
+
+<!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
+<!-- Si no está cargando pero no hay productos o la lista es nula, muestra un mensaje informativo -->
+<!-- Si hay productos para mostrar, muestra la tabla -->
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>  <!-- Mensaje de carga con énfasis (cursiva) -->
+}
+else if (tipoActores == null || tipoActores.Count == 0)
+{
+    <p>No hay información disponibles.</p>  <!-- Mensaje cuando no hay productos para mostrar -->
+}
+else
+{
+    <div class="table-responsive">  <!-- Contenedor que hace que la tabla sea responsive (se pueda desplazar horizontalmente en dispositivos pequeños) -->
+        <table class="table table-striped">  <!-- Tabla con estilos de Bootstrap (filas alternas sombreadas) -->
+            <thead>  <!-- Encabezado de la tabla -->
+                <tr>  <!-- Fila del encabezado -->
+                    <th>Email</th>  <!-- Columna para el código del producto -->
+                    <th>Contraseña</th>  <!-- Columna para el nombre del producto -->
+                    <!-- <th>Stock</th>  Columna para el stock disponible -->
+                    <!-- <th>Valor Unitario</th>  Columna para el precio unitario -->
+                </tr>
+            </thead>
+            <tbody>  <!-- Cuerpo de la tabla donde se muestran los datos -->
+                <!-- Bucle foreach que itera sobre cada producto en la lista -->
+                @foreach (var tpActor in tipoActores)
+                {
+                    string tempId = @ObtenerValor(tpActor, "email");
+                    string tempPass = @ObtenerValor(tpActor, "contrasena");
+
+                    <tr>  <!-- Fila para cada producto -->
+                        <td>@tempId</td>  <!-- Celda que muestra el código usando el método auxiliar -->
+                        <td>@tempPass</td>  <!-- Celda que muestra el nombre usando el método auxiliar -->
+                        <td>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(tempId, tempPass, "Edit")'>Editar</button>
+                        </td>
+                        <td><button id='@ObtenerValor(tpActor, "email")' class="btn btn-danger" @onclick="() => EliminarRegistro(tempId)">Eliminar</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+}
+
+@if (mensaje != null)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-white bg-@tipoAlerta border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @mensaje
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <label for="email" class="form-label">Email:</label>
+                    <input type="text" id="email" class="form-control" @bind="emailSeleccionado">
+                    <br>
+                    <label for="pass" class="form-label">Contraseña:</label>
+                    <input type="text" id="pass" class="form-control" @bind="contraSeleccionada">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="@GuardarCambios">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+@code {
+    // Lista para almacenar los productos que se obtienen de la API
+    private List<Dictionary<string, object>> tipoActores = new List<Dictionary<string, object>>();
+    private HttpClient? _httpClient = new HttpClient();
+    
+    // Bandera para indicar si se están cargando los datos
+    private bool cargando = true;
+    
+    // Variable para almacenar mensajes de error
+    private string? mensaje = null;
+
+    //Variable para almacenar el tipo de alerta
+    private string? tipoAlerta = "info";
+    
+    // Constantes para los parámetros de la API
+    private const string PROYECTO = "pry";
+    private const string TABLA = "usuario";
+
+    // Método que se ejecuta cuando se inicializa el componente
+    protected override async Task OnInitializedAsync()
+    {
+        // Llamar al método para cargar los productos
+        await CargarTipoActor();
+    }
+
+    // Método asíncrono para cargar los productos desde la API
+    private async Task CargarTipoActor()
+    {
+        // Establecer la bandera de carga en verdadero
+        cargando = true;
+        // Limpiar cualquier mensaje de error previo
+        mensaje = null;
+        
+        try
+        {
+            // Obtener todos los productos usando el servicio de entidades
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            
+            // Si la lista no es null, asignarla a la variable productos
+            if (resultado != null)
+            {
+                tipoActores = resultado;
+            }
+            else
+            {
+                // Si es null, inicializar como lista vacía para evitar errores
+                tipoActores = new List<Dictionary<string, object>>();
+            }
+        }
+        catch (Exception ex)
+        {
+            //Especificar tipo de alerta
+            tipoAlerta = "danger";
+
+            // En caso de error, guardar el mensaje y crear lista vacía
+            mensaje = $"Error al cargar tipo de actores: {ex.Message}";
+            tipoActores = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            // Establecer la bandera de carga en falso una vez finalizada la operación
+            cargando = false;
+        }
+    }
+
+    // Método para obtener un valor específico de un diccionario de manera segura
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        // Verificar si el diccionario es null
+        if (diccionario == null)
+            return string.Empty;
+            
+        // Verificar si el diccionario contiene la clave
+        if (diccionario.TryGetValue(clave, out var valor))
+        {
+            // Devolver el valor como cadena, o cadena vacía si es null
+            return valor?.ToString() ?? string.Empty;
+        }
+        
+        // Si la clave no existe, devolver cadena vacía
+        return string.Empty;
+    }
+
+    // Método para formatear un valor como precio
+    private string FormatearPrecio(string valor)
+    {
+        // Verificar si la cadena está vacía
+        if (string.IsNullOrEmpty(valor))
+            return "$0.00";
+            
+        // Intentar convertir el valor a decimal
+        if (decimal.TryParse(valor, out decimal precio))
+        {
+            // Formatear como moneda con el símbolo $ y dos decimales
+            return precio.ToString("C");
+        }
+        
+        // Si no se puede convertir, devolver el valor original
+        return valor;
+    }
+
+    public string contraSeleccionada = "";
+    public string emailSeleccionado = "";
+    public string emailInicial = "";
+    public string peticionSeleccionada = "";
+
+    public void AbrirModal(string idEmail, string pass, string peticion)
+    {
+        emailSeleccionado = idEmail;
+        emailInicial = idEmail;
+        contraSeleccionada = pass;
+        peticionSeleccionada = peticion;
+    }    
+
+    private async Task GuardarCambios()
+    {
+
+        var body = new Dictionary<string, object>
+        {
+            { "email", emailSeleccionado },
+            { "contrasena", contraSeleccionada }
+        };
+
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        HttpResponseMessage tempRespuesta = new HttpResponseMessage();
+
+        try
+        {
+            if(peticionSeleccionada == "Create"){
+
+                var respuesta = await _httpClient.PostAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}", content);
+                tempRespuesta = respuesta;
+            }
+            else if(peticionSeleccionada == "Edit"){
+                
+                var respuesta = await _httpClient.PutAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}/email/{emailInicial}", content);
+                tempRespuesta = respuesta;
+            }
+
+            
+            if (tempRespuesta.IsSuccessStatusCode)
+            {
+                @* Console.WriteLine("Registro actualizado con éxito."); *@
+
+                tipoAlerta = "success";
+                mensaje = $"{await tempRespuesta.Content.ReadAsStringAsync()}";
+                resetMensaje();
+            }
+            else{
+                tipoAlerta = "danger";
+                mensaje = $"{await tempRespuesta.Content.ReadAsStringAsync()}";
+            }
+
+        }
+        catch (HttpRequestException ex)
+        {
+            tipoAlerta = "danger";
+            mensaje = $"Error en la petición: {ex.Message}";
+            Console.WriteLine($"Error en la petición: {ex.Message}");
+        }
+        
+    }
+    
+
+    private async Task EliminarRegistro(string email)
+    {
+
+        try
+        {
+            var respuesta = await _httpClient.DeleteAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}/email/{email}");
+            
+            if (respuesta.IsSuccessStatusCode)
+            {
+                @* Console.WriteLine("Registro actualizado con éxito."); *@
+
+                tipoAlerta = "success";
+                mensaje = $"{await respuesta.Content.ReadAsStringAsync()}";
+                resetMensaje();
+            }
+
+        }
+        catch (HttpRequestException ex)
+        {
+            tipoAlerta = "danger";
+            mensaje = $"Error en la petición: {ex.Message}";
+            Console.WriteLine($"Error en la petición: {ex.Message}");
+        }
+        
+    }
+
+    private async void resetMensaje(){
+        
+        await Task.Delay(2000);
+        mensaje = null;
+        tipoAlerta = "info";
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+}
