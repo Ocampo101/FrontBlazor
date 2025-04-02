@@ -63,7 +63,7 @@ else
                         <td>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), tempNombre, "Edit")'>Editar</button>
                         </td>
-                        <td><button id='@ObtenerValor(tpActor, "id")' class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId))">Eliminar</button></td>
+                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId))">Eliminar</button></td>
                     </tr>
                 }
             </tbody>
@@ -101,7 +101,7 @@ else
                     <input type="text" id="nombre" class="form-control" @bind="nombreSeleccionado">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="@GuardarCambios">Save changes</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick='@GuardarCambios'>Save changes</button>
                 </div>
             </div>
         </div>
@@ -229,31 +229,38 @@ else
             { "nombre", nombreSeleccionado }
         };
 
-        var json = JsonSerializer.Serialize(body);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        
-        HttpResponseMessage tempRespuesta = new HttpResponseMessage();
+        bool tempRespuesta = false;
+        string tipoMsg = string.Empty;
 
         try
         {
-            if(peticionSeleccionada == "Create"){
-
-                var respuesta = await _httpClient.PostAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}", content);
+            if(peticionSeleccionada == "Create")
+            {
+                var respuesta = await servicioEntidad.CrearAsync(PROYECTO, TABLA, body);
                 tempRespuesta = respuesta;
+                tipoMsg = "Creado";
             }
-            else if(peticionSeleccionada == "Edit"){
+            else if(peticionSeleccionada == "Edit")
+            {                
+                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", IdSeleccionado.ToString() ,body);
+                tempRespuesta = respuesta;
+                tipoMsg = "Actualizado";
                 
-                var respuesta = await _httpClient.PutAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}/id/{IdSeleccionado}", content);
-                tempRespuesta = respuesta;
+            }
+            else{
+
+                tipoAlerta = "warning";
+                mensaje = "Acción no permitida, seleccione una acción valida";
+                resetMensaje();
             }
 
-            
-            if (tempRespuesta.IsSuccessStatusCode)
+
+            if (tempRespuesta != null)
             {
                 @* Console.WriteLine("Registro actualizado con éxito."); *@
 
                 tipoAlerta = "success";
-                mensaje = $"{await tempRespuesta.Content.ReadAsStringAsync()}";
+                mensaje = $"Registro {tipoMsg} Exitosamente!";
                 resetMensaje();
             }
 
@@ -273,14 +280,12 @@ else
 
         try
         {
-            var respuesta = await _httpClient.DeleteAsync($"http://localhost:5178/api/{PROYECTO}/{TABLA}/id/{id}");
+            var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id.ToString());
             
-            if (respuesta.IsSuccessStatusCode)
+            if (respuesta != null)
             {
-                @* Console.WriteLine("Registro actualizado con éxito."); *@
-
                 tipoAlerta = "success";
-                mensaje = $"{await respuesta.Content.ReadAsStringAsync()}";
+                mensaje = $"Registro Eliminado Exitosamente!";
                 resetMensaje();
             }
 
