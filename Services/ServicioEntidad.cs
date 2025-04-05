@@ -1,6 +1,7 @@
 using System.Net.Http.Json;     // Importar esta librería para usar métodos que ayudan a trabajar con JSON en solicitudes HTTP
 using System.Text;              // Necesario para trabajar con codificación de texto (UTF-8 para JSON)
-using System.Text.Json;         // Proporcionar funcionalidad para serializar y deserializar JSON
+using System.Text.Json; 
+using System.Net;        // Proporcionar funcionalidad para serializar y deserializar JSON
 
 namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicará esta clase
 {
@@ -93,7 +94,7 @@ namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicar
         /// <param name="nombreProyecto">Nombre del proyecto en la API.</param>
         /// <param name="nombreTabla">Nombre de la tabla donde crear la entidad.</param>
         /// <param name="entidad">Datos de la entidad a crear.</param>
-        public async Task<bool> CrearAsync(
+        public async Task<HttpResponseMessage> CrearAsync(
             string nombreProyecto, 
             string nombreTabla, 
             Dictionary<string, object> entidad)
@@ -116,12 +117,16 @@ namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicar
                 var respuesta = await _clienteHttp.PostAsync(url, contenido);
                 
                 // Devolver true si la respuesta indica éxito, false en caso contrario
-                return respuesta.IsSuccessStatusCode;
+                return respuesta;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error al crear entidad: {ex.Message}");
-                return false;  // Devolver false si ocurre un error
+
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Error al crear entidad: {ex.Message}")
+                };
             }
         }
 
@@ -133,7 +138,7 @@ namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicar
         /// <param name="nombreClave">Nombre del campo clave.</param>
         /// <param name="valorClave">Valor de la clave de la entidad a actualizar.</param>
         /// <param name="entidad">Datos actualizados de la entidad.</param>
-        public async Task<bool> ActualizarAsync(
+        public async Task<HttpResponseMessage> ActualizarAsync(
             string nombreProyecto, 
             string nombreTabla, 
             string nombreClave, 
@@ -159,12 +164,16 @@ namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicar
                 var respuesta = await _clienteHttp.PutAsync(url, contenido);
                 
                 // Devolver true si la respuesta indica éxito, false en caso contrario
-                return respuesta.IsSuccessStatusCode;
+                return respuesta;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error al actualizar entidad: {ex.Message}");
-                return false;  // Devolver false si ocurre un error
+                
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Error al crear entidad: {ex.Message}")
+                };
             }
         }
 
@@ -200,6 +209,41 @@ namespace FrontBlazor.Services  // Definir el espacio de nombres donde se ubicar
             {
                 Console.WriteLine($"Error al eliminar entidad: {ex.Message}");
                 return false;  // Devolver false si ocurre un error
+            }
+        }
+
+        public async Task<HttpResponseMessage> EjecutarProcedimientoAsync(
+            string nombreProyecto,
+            string nombreTabla,
+            string nombreSP,
+            Dictionary<string, object> parametros)
+        {
+            try
+            {
+                var url = $"{nombreProyecto}/{nombreTabla}/ejecutar-sp";
+
+                // Agregar el nombre del SP como parámetro adicional
+                parametros["nombreSP"] = nombreSP;
+
+                var contenido = new StringContent(
+                    JsonSerializer.Serialize(parametros),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var respuesta = await _clienteHttp.PostAsync(url, contenido);
+                
+
+                return respuesta;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Excepcion en procedimiento: {ex.Message}");
+
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Excepcion en procedimiento: {ex.Message}")
+                };
             }
         }
     }

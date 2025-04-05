@@ -229,7 +229,7 @@ else
             { "nombre", nombreSeleccionado }
         };
 
-        bool tempRespuesta = false;
+        HttpResponseMessage tempRespuesta = new HttpResponseMessage();
         string tipoMsg = string.Empty;
 
         try
@@ -255,7 +255,7 @@ else
             }
 
 
-            if (tempRespuesta != null)
+            if (tempRespuesta.IsSuccessStatusCode)
             {
                 @* Console.WriteLine("Registro actualizado con éxito."); *@
 
@@ -282,7 +282,7 @@ else
         {
             var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id.ToString());
             
-            if (respuesta != null)
+            if (respuesta)
             {
                 tipoAlerta = "success";
                 mensaje = $"Registro Eliminado Exitosamente!";

@@ -1,5 +1,5 @@
 <!--  Define la ruta URL para acceder a esta página (será accesible en /productos)-->
-@page "/tipoIndicador"  
+@page "/variablePorIndicador"  
 <!--  Importa el espacio de nombres para trabajar con listas y colecciones -->
 @using System.Collections.Generic  
 @using System.Text.Json  
@@ -9,6 +9,7 @@
 @using System.Net.Http.Json
 @using System.Linq 
 @using System.Text
+@using System.Globalization
 
 
 @inject NavigationManager Navigation
@@ -19,12 +20,12 @@
 <!--  Inyecta el servicio para manejar la navegación entre páginas ServicioEntidad-->
 
 
-<PageTitle>Indicadores</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
+<PageTitle>Variable</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
 
-<h1>Tipo de Indicador</h1>  <!-- Encabezado principal de la página -->
+<h1>Variable - Indicador</h1>  <!-- Encabezado principal de la página -->
 
 <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, "", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, 0, 0, 0.0, "ejemplo@ejemplo.com", DateTime.Now, "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
 </div>
 
 <!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
@@ -34,7 +35,7 @@
 {
     <p><em>Cargando...</em></p>  <!-- Mensaje de carga con énfasis (cursiva) -->
 }
-else if (tipoActores == null || tipoActores.Count == 0)
+else if (variablePorIndicador == null || variablePorIndicador.Count == 0)
 {
     <p>No hay información disponibles.</p>  <!-- Mensaje cuando no hay productos para mostrar -->
 }
@@ -44,26 +45,43 @@ else
         <table class="table table-striped">  <!-- Tabla con estilos de Bootstrap (filas alternas sombreadas) -->
             <thead>  <!-- Encabezado de la tabla -->
                 <tr>  <!-- Fila del encabezado -->
-                    <th>Id</th>  <!-- Columna para el código del producto -->
-                    <th>Nombre</th>  <!-- Columna para el nombre del producto -->
-                    <!-- <th>Stock</th>  Columna para el stock disponible -->
-                    <!-- <th>Valor Unitario</th>  Columna para el precio unitario -->
+                    <th>Variable</th>
+                    <th>Indicador</th>
+                    <th>Dato</th>
+                    <th>Email Usuario</th>
+                    <th>Fecha de Asignación</th>
                 </tr>
             </thead>
             <tbody>  <!-- Cuerpo de la tabla donde se muestran los datos -->
                 <!-- Bucle foreach que itera sobre cada producto en la lista -->
-                @foreach (var tpActor in tipoActores)
+                @foreach (var tpVarIndi in variablePorIndicador)
                 {
-                    string tempId = @ObtenerValor(tpActor, "id");
-                    string tempNombre = @ObtenerValor(tpActor, "nombre");
+                    string tempId = @ObtenerValor(tpVarIndi, "id");
+                    string tempVar = @ObtenerValor(tpVarIndi, "fkidvariable");
+                    string tempIndi = @ObtenerValor(tpVarIndi, "fkidindicador");
+                    string tempDato = @ObtenerValor(tpVarIndi, "dato");
+                    string tempEmail = @ObtenerValor(tpVarIndi, "fkemailusuario");
+                    string tempFecha = @ObtenerValor(tpVarIndi, "fechadato");
 
                     <tr>  <!-- Fila para cada producto -->
-                        <td>@tempId</td>  <!-- Celda que muestra el código usando el método auxiliar -->
-                        <td>@tempNombre</td>  <!-- Celda que muestra el nombre usando el método auxiliar -->
+                        <td>@ObtenerNombreVariable(tpVarIndi)</td>
+                        <td>@ObtenerNombreIndicador(tpVarIndi)</td>
+                        <td>@tempDato</td>
+                        <td>@tempEmail</td>
+                        <td>@tempFecha</td>
                         <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), tempNombre, "Edit")'>Editar</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" 
+                                @onclick='() => AbrirModal(
+                                    Convert.ToInt32(tempId)
+                                    ,Convert.ToInt32(tempIndi)
+                                    ,Convert.ToInt32(tempVar)
+                                    ,Convert.ToDouble(tempDato)
+                                    ,tempEmail
+                                    ,Convert.ToDateTime(tempFecha)
+                                    ,"Edit")'>Editar
+                            </button>
                         </td>
-                        <td><button id='@ObtenerValor(tpActor, "id")' class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId))">Eliminar</button></td>
+                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(tempId)">Eliminar</button></td>
                     </tr>
                 }
             </tbody>
@@ -80,25 +98,58 @@ else
                 <div class="toast-body">
                     @mensaje
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" @onclick="() => mensaje = null"></button>
             </div>
         </div>
     </div>
 }
+
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Detalle Instancia</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">PopUp</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <label for="nombre" class="form-label">Nombre:</label>
-                    <input type="text" id="nombre" class="form-control" @bind="nombreSeleccionado">
+
+                    <label for="repre" class="form-label">Variable:</label>
+                    <select class="form-control" @bind="variableSeleccionada">
+                        <option value="">Seleccione una Variable</option>
+                        @foreach (var tpVar in variable)
+                        {
+                            <option value='@ObtenerValor(tpVar, "id")'>@ObtenerValor(tpVar, "nombre")</option>
+                        }
+                    </select>
+                    <br>
+                    <label for="indicador" class="form-label">Indicador:</label>
+                    <select class="form-control" @bind="inidicadorSeleccionado">
+                        <option value="">Seleccione un Indicador</option>
+                        @foreach (var tpIndi in indicador)
+                        {
+                            <option value='@ObtenerValor(tpIndi, "id")'>@ObtenerValor(tpIndi, "nombre")</option>
+                        }
+                    </select>
+                    <br>
+                    <label for="dato" class="form-label">Dato:</label>
+                    <input type="number" id="dato" class="form-control" @bind="datoSeleccionado">
+                    <br>
+                    <label for="repre" class="form-label">Usuario:</label>
+                    <select class="form-control" @bind="emailSeleccionado">
+                        <option value="">Seleccione un Usuario</option>
+                        @foreach (var tpUser in usuario)
+                        {
+                            <option value='@ObtenerValor(tpUser, "email")'>@ObtenerValor(tpUser, "email")</option>
+                        }
+                    </select>
+                    <br>
+                    <label for="fecha" class="form-label">Fecha Dato:</label>
+                    <InputText @bind-Value="fechaFormat" type="datetime-local" class="form-control" />
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="@GuardarCambios">Save changes</button>
@@ -108,10 +159,13 @@ else
     </div>
 
 
+
 @code {
     // Lista para almacenar los productos que se obtienen de la API
-    private List<Dictionary<string, object>> tipoActores = new List<Dictionary<string, object>>();
-    private HttpClient? _httpClient = new HttpClient();
+    private List<Dictionary<string, object>> variablePorIndicador = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> variable = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> indicador = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> usuario = new List<Dictionary<string, object>>();
     
     // Bandera para indicar si se están cargando los datos
     private bool cargando = true;
@@ -124,17 +178,33 @@ else
     
     // Constantes para los parámetros de la API
     private const string PROYECTO = "pry";
-    private const string TABLA = "tipoindicador";
+    private const string TABLA = "variablesporindicador";
 
     // Método que se ejecuta cuando se inicializa el componente
     protected override async Task OnInitializedAsync()
     {
         // Llamar al método para cargar los productos
-        await CargarTipoIndi();
+        await CargarVariableIndicador();
+        await CargarVariable();
+        await CargarIndicador();
+        await CargarUsuario();
     }
 
+    private async Task CargarVariable(){
+        variable = await servicioEntidad.ObtenerTodosAsync("proyecto", "variable") ?? new();
+    }
+    private async Task CargarIndicador(){
+        indicador = await servicioEntidad.ObtenerTodosAsync("proyecto", "indicador") ?? new();
+    }
+
+    private async Task CargarUsuario(){
+        usuario = await servicioEntidad.ObtenerTodosAsync("proyecto", "usuario") ?? new();
+    }
+
+
+
     // Método asíncrono para cargar los productos desde la API
-    private async Task CargarTipoIndi()
+    private async Task CargarVariableIndicador()
     {
         // Establecer la bandera de carga en verdadero
         cargando = true;
@@ -149,12 +219,12 @@ else
             // Si la lista no es null, asignarla a la variable productos
             if (resultado != null)
             {
-                tipoActores = resultado;
+                variablePorIndicador = resultado;
             }
             else
             {
                 // Si es null, inicializar como lista vacía para evitar errores
-                tipoActores = new List<Dictionary<string, object>>();
+                variablePorIndicador = new List<Dictionary<string, object>>();
             }
         }
         catch (Exception ex)
@@ -164,7 +234,7 @@ else
 
             // En caso de error, guardar el mensaje y crear lista vacía
             mensaje = $"Error al cargar tipo de actores: {ex.Message}";
-            tipoActores = new List<Dictionary<string, object>>();
+            variablePorIndicador = new List<Dictionary<string, object>>();
         }
         finally
         {
@@ -209,23 +279,62 @@ else
         return valor;
     }
 
-    public string nombreSeleccionado = "";
-    public int IdSeleccionado;
+    public int idSeleccionado;
+    public int variableSeleccionada;
+    public int inidicadorSeleccionado;
+    public double datoSeleccionado;
+    public string emailSeleccionado = "";
+    public DateTime fechaSeleccionada;
+    public string fechaFormat {get; set;} = "";
     public string peticionSeleccionada = "";
 
-    public void AbrirModal(int id, string nombre, string peticion)
+
+    public void AbrirModal(int id, int indicador, int idVariable, double dato, string email, DateTime fecha,string peticion)
     {
-        IdSeleccionado = id;
-        nombreSeleccionado = nombre;
+        idSeleccionado = id;
+        inidicadorSeleccionado = indicador;
+        variableSeleccionada = idVariable;
+        datoSeleccionado = dato;
+        emailSeleccionado = email;
+        fechaSeleccionada = fecha;
+        fechaFormat = fecha.ToString("yyyy-MM-ddTHH:mm");
         peticionSeleccionada = peticion;
-    }    
+    }
+
+
+    private string ObtenerNombreVariable(Dictionary<string, object> entidad)
+    {
+        if (entidad.TryGetValue("fkidvariable", out var fkidvariable))
+        {
+            var persona = variable.FirstOrDefault(p => ObtenerValor(p, "id") == fkidvariable?.ToString());
+            return persona != null ? ObtenerValor(persona, "nombre") : "(sin variable)";
+        }
+
+        return "(sin variable)";
+    }
+
+    private string ObtenerNombreIndicador(Dictionary<string, object> entidad)
+    {
+        if (entidad.TryGetValue("fkidindicador", out var fkidindicador))
+        {
+            var persona = indicador.FirstOrDefault(p => ObtenerValor(p, "id") == fkidindicador?.ToString());
+            return persona != null ? ObtenerValor(persona, "nombre") : "(sin indicador)";
+        }
+
+        return "(sin indicador)";
+    }
+
 
     private async Task GuardarCambios()
     {
 
         var body = new Dictionary<string, object>
         {
-            { "nombre", nombreSeleccionado }
+            { "fkidvariable", variableSeleccionada },
+            { "fkidindicador", inidicadorSeleccionado },
+            { "dato", datoSeleccionado },
+            { "fkemailusuario", emailSeleccionado },
+            { "fechadato", fechaFormat }
         };
 
         HttpResponseMessage tempRespuesta = new HttpResponseMessage();
@@ -240,8 +349,8 @@ else
                 tipoMsg = "Creado";
             }
             else if(peticionSeleccionada == "Edit")
-            {                
-                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", IdSeleccionado.ToString() ,body);
+            {   
+                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", idSeleccionado.ToString() ,body);
                 tempRespuesta = respuesta;
                 tipoMsg = "Actualizado";
                 
@@ -254,15 +363,21 @@ else
             }
 
 
-            if (tempRespuesta.IsSuccessStatusCode)
-            {
-                @* Console.WriteLine("Registro actualizado con éxito."); *@
+            var serverMessage = await tempRespuesta.Content.ReadAsStringAsync();
 
+
+            if (!tempRespuesta.IsSuccessStatusCode)
+            {
+                tipoAlerta = "danger";
+                // Si el servidor devuelve un mensaje, úsalo; de lo contrario, usa el ReasonPhrase
+                mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : tempRespuesta.ReasonPhrase;
+            }
+            else
+            {
                 tipoAlerta = "success";
-                mensaje = $"Registro {tipoMsg} Exitosamente!";
+                mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : $"Registro {tipoMsg} Exitosamente!";
                 resetMensaje();
             }
-
         }
         catch (HttpRequestException ex)
         {
@@ -274,12 +389,12 @@ else
     }
     
 
-    private async Task EliminarRegistro(int id)
+    private async Task EliminarRegistro(string id)
     {
 
         try
         {
-            var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id.ToString());
+             var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
             
             if (respuesta)
             {

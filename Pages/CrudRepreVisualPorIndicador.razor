@@ -1,5 +1,5 @@
 <!--  Define la ruta URL para acceder a esta página (será accesible en /productos)-->
-@page "/tipoIndicador"  
+@page "/repreVisualPorIndicador"  
 <!--  Importa el espacio de nombres para trabajar con listas y colecciones -->
 @using System.Collections.Generic  
 @using System.Text.Json  
@@ -19,12 +19,12 @@
 <!--  Inyecta el servicio para manejar la navegación entre páginas ServicioEntidad-->
 
 
-<PageTitle>Indicadores</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
+<PageTitle>Representacion Visual</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
 
-<h1>Tipo de Indicador</h1>  <!-- Encabezado principal de la página -->
+<h1>Representación Visual - Indicador</h1>  <!-- Encabezado principal de la página -->
 
 <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, "", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, 0, "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
 </div>
 
 <!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
@@ -34,7 +34,7 @@
 {
     <p><em>Cargando...</em></p>  <!-- Mensaje de carga con énfasis (cursiva) -->
 }
-else if (tipoActores == null || tipoActores.Count == 0)
+else if (reprePorIndicador == null || reprePorIndicador.Count == 0)
 {
     <p>No hay información disponibles.</p>  <!-- Mensaje cuando no hay productos para mostrar -->
 }
@@ -44,26 +44,26 @@ else
         <table class="table table-striped">  <!-- Tabla con estilos de Bootstrap (filas alternas sombreadas) -->
             <thead>  <!-- Encabezado de la tabla -->
                 <tr>  <!-- Fila del encabezado -->
-                    <th>Id</th>  <!-- Columna para el código del producto -->
-                    <th>Nombre</th>  <!-- Columna para el nombre del producto -->
+                    <th>Indicador</th>  <!-- Columna para el código del producto -->
+                    <th>Representacion Visual</th>  <!-- Columna para el nombre del producto -->
                     <!-- <th>Stock</th>  Columna para el stock disponible -->
                     <!-- <th>Valor Unitario</th>  Columna para el precio unitario -->
                 </tr>
             </thead>
             <tbody>  <!-- Cuerpo de la tabla donde se muestran los datos -->
                 <!-- Bucle foreach que itera sobre cada producto en la lista -->
-                @foreach (var tpActor in tipoActores)
+                @foreach (var tpRepreIndi in reprePorIndicador)
                 {
-                    string tempId = @ObtenerValor(tpActor, "id");
-                    string tempNombre = @ObtenerValor(tpActor, "nombre");
+                    string tempId = @ObtenerValor(tpRepreIndi, "fkidindicador");
+                    string tempRepreVisual = @ObtenerValor(tpRepreIndi, "fkidrepresenvisual");
 
                     <tr>  <!-- Fila para cada producto -->
-                        <td>@tempId</td>  <!-- Celda que muestra el código usando el método auxiliar -->
-                        <td>@tempNombre</td>  <!-- Celda que muestra el nombre usando el método auxiliar -->
+                        <td>@ObtenerNombreIndicador(tpRepreIndi)</td>  <!-- Celda que muestra el código usando el método auxiliar -->
+                        <td>@ObtenerNombreRepre(tpRepreIndi)</td>  <!-- Celda que muestra el nombre usando el método auxiliar -->
                         <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), tempNombre, "Edit")'>Editar</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), Convert.ToInt32(tempRepreVisual), "Edit")'>Editar</button>
                         </td>
-                        <td><button id='@ObtenerValor(tpActor, "id")' class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId))">Eliminar</button></td>
+                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId), Convert.ToInt32(tempRepreVisual))">Eliminar</button></td>
                     </tr>
                 }
             </tbody>
@@ -80,25 +80,43 @@ else
                 <div class="toast-body">
                     @mensaje
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" @onclick="() => mensaje = null"></button>
             </div>
         </div>
     </div>
 }
+
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Detalle Instancia</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">PopUp</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <label for="nombre" class="form-label">Nombre:</label>
-                    <input type="text" id="nombre" class="form-control" @bind="nombreSeleccionado">
+
+                    <label for="indicador" class="form-label">Indicador:</label>
+                    <select class="form-control" @bind="inidicadorSeleccionado">
+                        <option value="">Seleccione un Indicador</option>
+                        @foreach (var tpIndi in indicador)
+                        {
+                            <option value='@ObtenerValor(tpIndi, "id")'>@ObtenerValor(tpIndi, "nombre")</option>
+                        }
+                    </select>
+                    <br>
+                    <label for="repre" class="form-label">Representacion Visual:</label>
+                    <select class="form-control" @bind="repreVisualSeleccionada">
+                        <option value="">Seleccione un Representacion</option>
+                        @foreach (var tpRepre in repreVisual)
+                        {
+                            <option value='@ObtenerValor(tpRepre, "id")'>@ObtenerValor(tpRepre, "nombre")</option>
+                        }
+                    </select>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="@GuardarCambios">Save changes</button>
@@ -108,10 +126,12 @@ else
     </div>
 
 
+
 @code {
     // Lista para almacenar los productos que se obtienen de la API
-    private List<Dictionary<string, object>> tipoActores = new List<Dictionary<string, object>>();
-    private HttpClient? _httpClient = new HttpClient();
+    private List<Dictionary<string, object>> reprePorIndicador = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> indicador = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> repreVisual = new List<Dictionary<string, object>>();
     
     // Bandera para indicar si se están cargando los datos
     private bool cargando = true;
@@ -124,17 +144,27 @@ else
     
     // Constantes para los parámetros de la API
     private const string PROYECTO = "pry";
-    private const string TABLA = "tipoindicador";
+    private const string TABLA = "represenvisualporindicador";
 
     // Método que se ejecuta cuando se inicializa el componente
     protected override async Task OnInitializedAsync()
     {
         // Llamar al método para cargar los productos
-        await CargarTipoIndi();
+        await CargarRepreVisualInidicador();
+        await CargarIndicador();
+        await CargarRepreVisual();
+    }
+
+    private async Task CargarRepreVisual(){
+        repreVisual = await servicioEntidad.ObtenerTodosAsync("proyecto", "represenvisual") ?? new();
+    }
+
+    private async Task CargarIndicador(){
+        indicador = await servicioEntidad.ObtenerTodosAsync("proyecto", "indicador") ?? new();
     }
 
     // Método asíncrono para cargar los productos desde la API
-    private async Task CargarTipoIndi()
+    private async Task CargarRepreVisualInidicador()
     {
         // Establecer la bandera de carga en verdadero
         cargando = true;
@@ -149,12 +179,12 @@ else
             // Si la lista no es null, asignarla a la variable productos
             if (resultado != null)
             {
-                tipoActores = resultado;
+                reprePorIndicador = resultado;
             }
             else
             {
                 // Si es null, inicializar como lista vacía para evitar errores
-                tipoActores = new List<Dictionary<string, object>>();
+                reprePorIndicador = new List<Dictionary<string, object>>();
             }
         }
         catch (Exception ex)
@@ -164,7 +194,7 @@ else
 
             // En caso de error, guardar el mensaje y crear lista vacía
             mensaje = $"Error al cargar tipo de actores: {ex.Message}";
-            tipoActores = new List<Dictionary<string, object>>();
+            reprePorIndicador = new List<Dictionary<string, object>>();
         }
         finally
         {
@@ -209,23 +239,53 @@ else
         return valor;
     }
 
-    public string nombreSeleccionado = "";
-    public int IdSeleccionado;
+    public int inidicadorSeleccionado;
+    public int repreVisualSeleccionada;
+    public int inidicadorIncial;
+    public int repreInicial;
     public string peticionSeleccionada = "";
 
-    public void AbrirModal(int id, string nombre, string peticion)
+
+    public void AbrirModal(int indicador, int repreVisual, string peticion)
     {
-        IdSeleccionado = id;
-        nombreSeleccionado = nombre;
+        inidicadorSeleccionado = indicador;
+        repreVisualSeleccionada = repreVisual;
+        inidicadorIncial = indicador;
+        repreInicial = repreVisual;
         peticionSeleccionada = peticion;
-    }    
+    }
+
+
+    private string ObtenerNombreRepre(Dictionary<string, object> entidad)
+    {
+        if (entidad.TryGetValue("fkidrepresenvisual", out var fkidrepresenvisual))
+        {
+            var persona = repreVisual.FirstOrDefault(p => ObtenerValor(p, "id") == fkidrepresenvisual?.ToString());
+            return persona != null ? ObtenerValor(persona, "nombre") : "(sin representacion)";
+        }
+
+        return "(sin representacion)";
+    }
+
+    private string ObtenerNombreIndicador(Dictionary<string, object> entidad)
+    {
+        if (entidad.TryGetValue("fkidindicador", out var fkidindicador))
+        {
+            var persona = indicador.FirstOrDefault(p => ObtenerValor(p, "id") == fkidindicador?.ToString());
+            return persona != null ? ObtenerValor(persona, "nombre") : "(sin indicador)";
+        }
+
+        return "(sin indicador)";
+    }
+
 
     private async Task GuardarCambios()
     {
 
         var body = new Dictionary<string, object>
         {
-            { "nombre", nombreSeleccionado }
+            { "fkidindicador", inidicadorSeleccionado },
+            { "fkidrepresenvisual", repreVisualSeleccionada }
         };
 
         HttpResponseMessage tempRespuesta = new HttpResponseMessage();
@@ -240,8 +300,18 @@ else
                 tipoMsg = "Creado";
             }
             else if(peticionSeleccionada == "Edit")
-            {                
-                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", IdSeleccionado.ToString() ,body);
+            {   
+                body["accion"] = "edit";
+                body["indicadorInicial"] = inidicadorIncial;
+                body["repreInicial"] = repreInicial;
+
+                var respuesta = await servicioEntidad.EjecutarProcedimientoAsync(
+                    "pry",
+                    "tbl",
+                    "accion_reprevisual_por_indicador",
+                    body
+                );
+
                 tempRespuesta = respuesta;
                 tipoMsg = "Actualizado";
                 
@@ -254,12 +324,26 @@ else
             }
 
 
-            if (tempRespuesta.IsSuccessStatusCode)
-            {
-                @* Console.WriteLine("Registro actualizado con éxito."); *@
+            var serverMessage = await tempRespuesta.Content.ReadAsStringAsync();
 
+
+            if (!tempRespuesta.IsSuccessStatusCode)
+            {
+                tipoAlerta = "danger";
+
+                if (!string.IsNullOrWhiteSpace(serverMessage) && serverMessage.Length > 150)
+                {
+                    mensaje = "Internal error for duplicate key";
+                }
+                else
+                {
+                    mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : tempRespuesta.ReasonPhrase;
+                }
+            }
+            else
+            {
                 tipoAlerta = "success";
-                mensaje = $"Registro {tipoMsg} Exitosamente!";
+                mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : $"Registro {tipoMsg} Exitosamente!";
                 resetMensaje();
             }
 
@@ -274,17 +358,47 @@ else
     }
     
 
-    private async Task EliminarRegistro(int id)
+    private async Task EliminarRegistro(int idindicador, int idRepre)
     {
 
         try
         {
-            var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id.ToString());
+            var body = new Dictionary<string, object>
+            {
+                { "fkidindicador", idindicador },
+                { "fkidrepresenvisual", idRepre },
+                { "indicadorInicial", 0 },
+                { "repreInicial", 0 }
+            };
+
+            body["accion"] = "delete";
+
+            var respuesta = await servicioEntidad.EjecutarProcedimientoAsync(
+                "pry",
+                "tbl",
+                "accion_reprevisual_por_indicador",
+                body
+            );
+
+            var serverMessage = await respuesta.Content.ReadAsStringAsync();
             
-            if (respuesta)
+            if (!respuesta.IsSuccessStatusCode)
+            {
+                tipoAlerta = "danger";
+
+                if (!string.IsNullOrWhiteSpace(serverMessage) && serverMessage.Length > 150)
+                {
+                    mensaje = "Error al intentar eliminar el registro, verifique sus dependencias";
+                }
+                else
+                {
+                    mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : respuesta.ReasonPhrase;
+                }
+            }
+            else
             {
                 tipoAlerta = "success";
-                mensaje = $"Registro Eliminado Exitosamente!";
+                mensaje = "Registro Eliminado Exitosamente!";
                 resetMensaje();
             }
 

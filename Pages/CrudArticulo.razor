@@ -1,0 +1,260 @@
+<!--  Define la ruta URL para acceder a esta página (será accesible en /productos)-->
+@page "/articulo"  
+<!--  Importa el espacio de nombres para trabajar con listas y colecciones -->
+@using System.Collections.Generic  
+@using System.Text.Json  
+<!--  Importa el espacio de nombres para trabajar con JSON -->
+@using Services 
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Linq 
+@using System.Text
+
+
+@inject NavigationManager Navigation
+<!--  Importa el espacio de nombres donde se encuentra el ServicioEntidad-->
+@inject ServicioEntidad servicioEntidad  
+<!--  Inyecta el servicio que se comunicará con la API ServicioEntidad -->
+@inject NavigationManager navegacionManager  
+<!--  Inyecta el servicio para manejar la navegación entre páginas ServicioEntidad-->
+
+
+<PageTitle>Articulo</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
+
+<h1>Artículo</h1>  <!-- Encabezado principal de la página -->
+
+@* <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal("","","","","","","","","","","","","","","", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+</div> *@
+
+<br>
+
+<style>
+
+    td {
+        vertical-align: middle;
+        padding: 10px;
+    }
+
+</style>
+
+<!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
+<!-- Si no está cargando pero no hay productos o la lista es nula, muestra un mensaje informativo -->
+<!-- Si hay productos para mostrar, muestra la tabla -->
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>  <!-- Mensaje de carga con énfasis (cursiva) -->
+}
+else if (articulo == null || articulo.Count == 0)
+{
+    <p>No hay información disponibles.</p>  <!-- Mensaje cuando no hay productos para mostrar -->
+}
+else
+{
+    <div style="width: 100%; overflow-x: auto; max-width: 75vw;">
+        <div class="table-responsive" style="white-space: normal;;">  <!-- Contenedor que hace que la tabla sea responsive (se pueda desplazar horizontalmente en dispositivos pequeños) -->
+            <table class="table table-striped" style="table-layout: auto;">  <!-- Tabla con estilos de Bootstrap (filas alternas sombreadas) -->
+                <thead>  
+                    <tr style="text-align: center;">  
+                        <th>Id</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Sección</th>
+                        <th>Subsección</th>
+                    </tr>
+                </thead>
+                <tbody>  <!-- Cuerpo de la tabla donde se muestran los datos -->
+                    <!-- Bucle foreach que itera sobre cada producto en la lista -->
+                    @foreach (var tpArt in articulo)
+                    {
+                        string tempId = ObtenerValor(tpArt, "id");
+                        string tempNombre = ObtenerValor(tpArt, "nombre");
+                        string tempDescrip = ObtenerValor(tpArt, "descripcion");
+                        string tempSecc = ObtenerValor(tpArt, "fkidseccion");
+                        string tempSubSecc = ObtenerValor(tpArt, "fkidsubseccion");
+
+                        <tr>  
+                            <td style="min-width: 110px;">@tempId</td> 
+                            <td style="min-width: 110px;">@tempNombre</td>
+                            <td style="min-width: 300px;">@tempDescrip</td>
+                            <td style="min-width: 150px;">@ObtenerNombrePorId(tpArt, "fkidseccion", "nombre")</td>
+                            <td style="min-width: 150px;">@ObtenerNombrePorId(tpArt, "fkidsubseccion", "nombre")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+}
+
+@if (mensaje != null)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-white bg-@tipoAlerta border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @mensaje
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" @onclick="() => mensaje = null"></button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+    // Lista para almacenar los productos que se obtienen de la API
+    private List<Dictionary<string, object>> articulo = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> seccion = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> subseccion = new List<Dictionary<string, object>>();
+    
+    
+    // Bandera para indicar si se están cargando los datos
+    private bool cargando = true;
+    
+    // Variable para almacenar mensajes de error
+    private string? mensaje = null;
+
+    //Variable para almacenar el tipo de alerta
+    private string? tipoAlerta = "info";
+    
+    // Constantes para los parámetros de la API
+    private const string PROYECTO = "pry";
+    private const string TABLA = "articulo";
+
+    // Método que se ejecuta cuando se inicializa el componente
+    protected override async Task OnInitializedAsync()
+    {
+        // Llamar al método para cargar los productos
+        await CargarArticulo();
+        await CargarSeccion();
+        await CargarSubseccion();
+    }
+
+    private async Task CargarSeccion(){
+        seccion = await servicioEntidad.ObtenerTodosAsync("proyecto", "seccion") ?? new();
+    }
+
+    private async Task CargarSubseccion(){
+        subseccion = await servicioEntidad.ObtenerTodosAsync("proyecto", "subseccion") ?? new();
+    }
+
+    // Método asíncrono para cargar los productos desde la API
+    private async Task CargarArticulo()
+    {
+        // Establecer la bandera de carga en verdadero
+        cargando = true;
+        // Limpiar cualquier mensaje de error previo
+        mensaje = null;
+        
+        try
+        {
+            // Obtener todos los productos usando el servicio de entidades
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            
+            // Si la lista no es null, asignarla a la variable productos
+            if (resultado != null)
+            {
+                articulo = resultado;
+            }
+            else
+            {
+                // Si es null, inicializar como lista vacía para evitar errores
+                articulo = new List<Dictionary<string, object>>();
+            }
+        }
+        catch (Exception ex)
+        {
+            //Especificar tipo de alerta
+            tipoAlerta = "danger";
+
+            // En caso de error, guardar el mensaje y crear lista vacía
+            mensaje = $"Error al cargar tipo de actores: {ex.Message}";
+            articulo = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            // Establecer la bandera de carga en falso una vez finalizada la operación
+            cargando = false;
+        }
+    }
+
+    // Método para obtener un valor específico de un diccionario de manera segura
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        // Verificar si el diccionario es null
+        if (diccionario == null)
+            return string.Empty;
+            
+        // Verificar si el diccionario contiene la clave
+        if (diccionario.TryGetValue(clave, out var valor))
+        {
+            // Devolver el valor como cadena, o cadena vacía si es null
+            return valor?.ToString() ?? string.Empty;
+        }
+        
+        // Si la clave no existe, devolver cadena vacía
+        return string.Empty;
+    }
+
+    // Método para formatear un valor como precio
+    private string FormatearPrecio(string valor)
+    {
+        // Verificar si la cadena está vacía
+        if (string.IsNullOrEmpty(valor))
+            return "$0.00";
+            
+        // Intentar convertir el valor a decimal
+        if (decimal.TryParse(valor, out decimal precio))
+        {
+            // Formatear como moneda con el símbolo $ y dos decimales
+            return precio.ToString("C");
+        }
+        
+        // Si no se puede convertir, devolver el valor original
+        return valor;
+    }
+
+
+
+    //================================ INICIO - Relacionamiento de ID con Nombre ====================================
+
+    private string ObtenerNombrePorId(Dictionary<string, object> entidad, string nombreFk, string nombreCampo)
+    {
+        if (entidad.TryGetValue(nombreFk, out var fkObtenido))
+        {
+
+            List<Dictionary<string, object>> entidadConsultada = new List<Dictionary<string, object>>();;
+            
+            if(nombreFk == "fkidseccion"){
+                entidadConsultada = seccion;
+            }
+            else if(nombreFk == "fkidsubseccion")
+            {
+                entidadConsultada = subseccion;
+            }
+
+            var consulta = entidadConsultada.FirstOrDefault(p => ObtenerValor(p, "id") == fkObtenido?.ToString());
+            return consulta != null ? ObtenerValor(consulta, nombreCampo) : "(no encontrado)";
+        }
+
+        return "(no encontrado)";
+    }
+
+
+
+//================================ FIN - Relacionamiento de ID con Nombre ====================================
+
+
+    private async void resetMensaje(){
+        
+        await Task.Delay(2000);
+        mensaje = null;
+        tipoAlerta = "info";
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+}

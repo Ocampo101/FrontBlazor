@@ -1,5 +1,5 @@
 <!--  Define la ruta URL para acceder a esta página (será accesible en /productos)-->
-@page "/tipoIndicador"  
+@page "/actor"  
 <!--  Importa el espacio de nombres para trabajar con listas y colecciones -->
 @using System.Collections.Generic  
 @using System.Text.Json  
@@ -19,12 +19,12 @@
 <!--  Inyecta el servicio para manejar la navegación entre páginas ServicioEntidad-->
 
 
-<PageTitle>Indicadores</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
+<PageTitle>Actores</PageTitle>  <!-- Define el título que se mostrará en la pestaña del navegador -->
 
-<h1>Tipo de Indicador</h1>  <!-- Encabezado principal de la página -->
+<h1>Actores</h1>  <!-- Encabezado principal de la página -->
 
 <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, "", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal("", "", 0, "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
 </div>
 
 <!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
@@ -34,7 +34,7 @@
 {
     <p><em>Cargando...</em></p>  <!-- Mensaje de carga con énfasis (cursiva) -->
 }
-else if (tipoActores == null || tipoActores.Count == 0)
+else if (actor == null || actor.Count == 0)
 {
     <p>No hay información disponibles.</p>  <!-- Mensaje cuando no hay productos para mostrar -->
 }
@@ -44,26 +44,27 @@ else
         <table class="table table-striped">  <!-- Tabla con estilos de Bootstrap (filas alternas sombreadas) -->
             <thead>  <!-- Encabezado de la tabla -->
                 <tr>  <!-- Fila del encabezado -->
-                    <th>Id</th>  <!-- Columna para el código del producto -->
-                    <th>Nombre</th>  <!-- Columna para el nombre del producto -->
-                    <!-- <th>Stock</th>  Columna para el stock disponible -->
-                    <!-- <th>Valor Unitario</th>  Columna para el precio unitario -->
+                    <th>Id</th>
+                    <th>Nombre</th>
+                    <th>Tipo de Actor</th>
                 </tr>
             </thead>
             <tbody>  <!-- Cuerpo de la tabla donde se muestran los datos -->
                 <!-- Bucle foreach que itera sobre cada producto en la lista -->
-                @foreach (var tpActor in tipoActores)
+                @foreach (var tpActor in actor)
                 {
                     string tempId = @ObtenerValor(tpActor, "id");
                     string tempNombre = @ObtenerValor(tpActor, "nombre");
+                    string tempTipo = @ObtenerValor(tpActor, "fkidtipoactor");
 
                     <tr>  <!-- Fila para cada producto -->
-                        <td>@tempId</td>  <!-- Celda que muestra el código usando el método auxiliar -->
-                        <td>@tempNombre</td>  <!-- Celda que muestra el nombre usando el método auxiliar -->
+                        <td>@tempId</td>
+                        <td>@tempNombre</td>
+                        <td>@ObtenerNombreTipoActor(tpActor)</td>
                         <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), tempNombre, "Edit")'>Editar</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(tempId, tempNombre, Convert.ToInt32(tempTipo), "Edit")'>Editar</button>
                         </td>
-                        <td><button id='@ObtenerValor(tpActor, "id")' class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId))">Eliminar</button></td>
+                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(tempId)">Eliminar</button></td>
                     </tr>
                 }
             </tbody>
@@ -80,25 +81,40 @@ else
                 <div class="toast-body">
                     @mensaje
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" @onclick="() => mensaje = null"></button>
             </div>
         </div>
     </div>
 }
+
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Detalle Instancia</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">PopUp</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
+
+                    <label for="id" class="form-label">Id:</label>
+                    <input type="text" id="id" class="form-control" @bind="idSeleccionado">
+                    <br>
                     <label for="nombre" class="form-label">Nombre:</label>
-                    <input type="text" id="nombre" class="form-control" @bind="nombreSeleccionado">
+                    <input type="text" id="nombre" class="form-control" @bind="actorSeleccionado">
+                    <br>
+                    <label for="tpActor" class="form-label">Tipo Actor:</label>
+                    <select class="form-control" @bind="tipoSeleccionado">
+                        <option value="">Seleccione un Tipo</option>
+                        @foreach (var tpTipo in tipoActor)
+                        {
+                            <option value='@ObtenerValor(tpTipo, "id")'>@ObtenerValor(tpTipo, "nombre")</option>
+                        }
+                    </select>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="@GuardarCambios">Save changes</button>
@@ -108,10 +124,11 @@ else
     </div>
 
 
+
 @code {
     // Lista para almacenar los productos que se obtienen de la API
-    private List<Dictionary<string, object>> tipoActores = new List<Dictionary<string, object>>();
-    private HttpClient? _httpClient = new HttpClient();
+    private List<Dictionary<string, object>> actor = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> tipoActor = new List<Dictionary<string, object>>();
     
     // Bandera para indicar si se están cargando los datos
     private bool cargando = true;
@@ -124,17 +141,22 @@ else
     
     // Constantes para los parámetros de la API
     private const string PROYECTO = "pry";
-    private const string TABLA = "tipoindicador";
+    private const string TABLA = "actor";
 
     // Método que se ejecuta cuando se inicializa el componente
     protected override async Task OnInitializedAsync()
     {
         // Llamar al método para cargar los productos
-        await CargarTipoIndi();
+        await CargarActor();
+        await CargarTipoActor();
+    }
+
+    private async Task CargarTipoActor(){
+        tipoActor = await servicioEntidad.ObtenerTodosAsync("proyecto", "tipoactor") ?? new();
     }
 
     // Método asíncrono para cargar los productos desde la API
-    private async Task CargarTipoIndi()
+    private async Task CargarActor()
     {
         // Establecer la bandera de carga en verdadero
         cargando = true;
@@ -149,12 +171,12 @@ else
             // Si la lista no es null, asignarla a la variable productos
             if (resultado != null)
             {
-                tipoActores = resultado;
+                actor = resultado;
             }
             else
             {
                 // Si es null, inicializar como lista vacía para evitar errores
-                tipoActores = new List<Dictionary<string, object>>();
+                actor = new List<Dictionary<string, object>>();
             }
         }
         catch (Exception ex)
@@ -164,7 +186,7 @@ else
 
             // En caso de error, guardar el mensaje y crear lista vacía
             mensaje = $"Error al cargar tipo de actores: {ex.Message}";
-            tipoActores = new List<Dictionary<string, object>>();
+            actor = new List<Dictionary<string, object>>();
         }
         finally
         {
@@ -209,23 +231,43 @@ else
         return valor;
     }
 
-    public string nombreSeleccionado = "";
-    public int IdSeleccionado;
+    public string actorSeleccionado = "";
+    public int tipoSeleccionado;
+    public string idSeleccionado = "";
+    public string idInicial = "";
     public string peticionSeleccionada = "";
 
-    public void AbrirModal(int id, string nombre, string peticion)
+
+    public void AbrirModal(string id, string idActor, int idTipo,  string peticion)
     {
-        IdSeleccionado = id;
-        nombreSeleccionado = nombre;
+        idSeleccionado = id;
+        idInicial = id;
+        actorSeleccionado = idActor;
+        tipoSeleccionado = idTipo;
         peticionSeleccionada = peticion;
-    }    
+    }
+
+
+    private string ObtenerNombreTipoActor(Dictionary<string, object> entidad)
+    {
+        if (entidad.TryGetValue("fkidtipoactor", out var fkidtipoactor))
+        {
+            var persona = tipoActor.FirstOrDefault(p => ObtenerValor(p, "id") == fkidtipoactor?.ToString());
+            return persona != null ? ObtenerValor(persona, "nombre") : "(sin tipo actor)";
+        }
+
+        return "(sin tipo actor)";
+    }
+
 
     private async Task GuardarCambios()
     {
 
         var body = new Dictionary<string, object>
         {
-            { "nombre", nombreSeleccionado }
+            { "id", idSeleccionado },
+            { "nombre", actorSeleccionado },
+            { "fkidtipoactor", tipoSeleccionado }
         };
 
         HttpResponseMessage tempRespuesta = new HttpResponseMessage();
@@ -240,8 +282,8 @@ else
                 tipoMsg = "Creado";
             }
             else if(peticionSeleccionada == "Edit")
-            {                
-                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", IdSeleccionado.ToString() ,body);
+            {   
+                var respuesta = await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", idInicial ,body);
                 tempRespuesta = respuesta;
                 tipoMsg = "Actualizado";
                 
@@ -254,12 +296,19 @@ else
             }
 
 
-            if (tempRespuesta.IsSuccessStatusCode)
-            {
-                @* Console.WriteLine("Registro actualizado con éxito."); *@
+            var serverMessage = await tempRespuesta.Content.ReadAsStringAsync();
 
+
+            if (!tempRespuesta.IsSuccessStatusCode)
+            {
+                tipoAlerta = "danger";
+                // Si el servidor devuelve un mensaje, úsalo; de lo contrario, usa el ReasonPhrase
+                mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : tempRespuesta.ReasonPhrase;
+            }
+            else
+            {
                 tipoAlerta = "success";
-                mensaje = $"Registro {tipoMsg} Exitosamente!";
+                mensaje = !string.IsNullOrWhiteSpace(serverMessage) ? serverMessage : $"Registro {tipoMsg} Exitosamente!";
                 resetMensaje();
             }
 
@@ -274,12 +323,12 @@ else
     }
     
 
-    private async Task EliminarRegistro(int id)
+    private async Task EliminarRegistro(string id)
     {
 
         try
         {
-            var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id.ToString());
+            var respuesta = await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
             
             if (respuesta)
             {
