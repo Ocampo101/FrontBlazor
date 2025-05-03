@@ -2,6 +2,8 @@
 <!-- LayoutComponentBase es la clase base para todos los componentes de diseño en Blazor -->
 <!-- Proporciona la propiedad Body para insertar el contenido de la página actual -->
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime  // Inyectar el servicio de JavaScript Runtime para interactuar con sessionStorage
 
 <!-- Contenedor principal que envuelve toda la página -->
 <div class="page">
@@ -17,7 +19,30 @@
         <!-- Barra superior con padding horizontal (px-4) -->
         <div class="top-row px-4">
             <!-- Enlace "About" que abre la documentación oficial de ASP.NET Core en una nueva pestaña -->
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <a class="me-4" href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            
+            @if (string.IsNullOrEmpty(UserName))
+            {
+                <button class="btn btn-primary" @onclick="PageLogin">
+                    Iniciar Sesión
+                </button>
+            }
+            else
+            {
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" @onclick="ToggleDropdown">
+                        @UserName
+                    </button>
+                    @if (showDropdown)
+                    {
+                        <div class="dropdown-menu show">
+                            <button class="dropdown-item" @onclick="PageProfile">Perfil</button>
+                            <button class="dropdown-item" @onclick="PageLogout">Logout</button>
+                        </div>
+                    }
+                </div>
+            }
+
         </div>
 
         <!-- Contenedor del contenido principal con padding horizontal (px-4) -->
@@ -33,3 +58,34 @@
 <!-- Esta es probablemente parte de un sistema de temas o personalización -->
 <!-- No es una característica estándar de Blazor, sino específica de este proyecto -->
 <userStyle>Normal</userStyle>
+
+@code{
+
+    private string? UserName;
+    private bool showDropdown = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserName = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "usuarioEmail");
+    }
+
+    private void ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+    }
+
+    void PageLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    void PageLogout()
+    {
+        Navigation.NavigateTo("/logout");
+    }
+
+    void PageProfile()
+    {
+        Navigation.NavigateTo("/prueba-roles-rutas");
+    }
+}

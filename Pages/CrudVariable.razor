@@ -10,8 +10,10 @@
 @using System.Linq 
 @using System.Text
 @using System.Globalization
+@inherits ValidacionAcceso
 
 
+@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 <!--  Importa el espacio de nombres donde se encuentra el ServicioEntidad-->
 @inject ServicioEntidad servicioEntidad  
@@ -24,9 +26,18 @@
 
 <h1>Variables</h1>  <!-- Encabezado principal de la página -->
 
-<div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, "", "ejemplo@ejemplo.com", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
-</div>
+@if (roles.Contains("Verificador") || roles.Contains("Validador"))
+{
+    <div class="mb-3">  
+        <button class="btn btn-primary" disabled>Crear Nuevo</button> 
+    </div>
+}
+else
+{
+    <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, "", "ejemplo@ejemplo.com", "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+    </div>
+}
 
 <!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
 <!-- Si no está cargando pero no hay productos o la lista es nula, muestra un mensaje informativo -->
@@ -63,16 +74,25 @@ else
                         <td>@tempVar</td>
                         <td>@tempFecha</td>
                         <td>@tempEmail</td>
-                        <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" 
-                                @onclick='() => AbrirModal(
-                                    Convert.ToInt32(tempId)
-                                    ,tempVar
-                                    ,tempEmail
-                                    ,"Edit")'>Editar
-                            </button>
-                        </td>
-                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(tempId)">Eliminar</button></td>
+                        
+                         @if (!roles.Contains("Verificador")){
+                            
+                            <td>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" 
+                                    @onclick='() => AbrirModal(
+                                        Convert.ToInt32(tempId)
+                                        ,tempVar
+                                        ,tempEmail
+                                        ,"Edit")'>Editar
+                                </button>
+                            </td>
+
+                            @if (!roles.Contains("Validador"))
+                            {
+                                <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(tempId)">Eliminar</button></td>
+                            }
+                        }
+                        
                     </tr>
                 }
             </tbody>
@@ -134,6 +154,9 @@ else
     // Lista para almacenar los productos que se obtienen de la API
     private List<Dictionary<string, object>> variable = new List<Dictionary<string, object>>();
     private List<Dictionary<string, object>> usuario = new List<Dictionary<string, object>>();
+
+    // Lista para almacenar los roles obtenidos del sessionStorage
+    private List<string> roles = new List<string>();
     
     // Bandera para indicar si se están cargando los datos
     private bool cargando = true;
@@ -154,6 +177,18 @@ else
         // Llamar al método para cargar los productos
         await CargarVariable();
         await CargarUsuario();
+
+        var scriptRoles = @"
+                Object.keys(sessionStorage)
+                    .filter(key => key.startsWith('rolUsuario'))
+                    .map(key => sessionStorage.getItem(key))   
+            ";
+
+        // Ejecutar el script JavaScript para obtener los roles
+        roles = await JSRuntime.InvokeAsync<List<string>>(
+            "eval", 
+            scriptRoles
+        );
     }
 
     private async Task CargarUsuario(){

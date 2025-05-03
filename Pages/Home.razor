@@ -1,12 +1,40 @@
 ﻿<!-- Directiva que establece que este componente es accesible en la ruta raíz de la aplicación -->
 <!-- La página será la página de inicio (ruta "/") -->
 @page "/"
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <!-- Define el título que se mostrará en la pestaña del navegador cuando se visite la página de inicio -->
 <PageTitle>Home</PageTitle>
 
-<!-- Encabezado principal de la página con un saludo genérico -->
-<h1>Hello, world!</h1>
+<h1>Hello, World!!</h1>
+<br>
 
-<!-- Texto simple de bienvenida que aparece debajo del encabezado -->
-Welcome to your new app.
+ @if (string.IsNullOrEmpty(UserName))
+{
+    <h5>You need to log in to the application. Click to next button</h5>
+    <button class="btn btn-primary" @onclick="PageLogin">
+        Iniciar Sesión
+    </button>
+}
+else
+{
+    <h4>Welcome <i><span style="color:red;">@UserName</span></i> to your new app</h4>
+}
+
+
+@code{
+
+    private string? UserName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserName = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "usuarioEmail");
+    }
+
+    void PageLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+}

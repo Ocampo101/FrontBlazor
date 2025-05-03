@@ -9,8 +9,10 @@
 @using System.Net.Http.Json
 @using System.Linq 
 @using System.Text
+@inherits ValidacionAcceso
 
 
+@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 <!--  Importa el espacio de nombres donde se encuentra el ServicioEntidad-->
 @inject ServicioEntidad servicioEntidad  
@@ -23,9 +25,19 @@
 
 <h1>Responsable - Indicador</h1>  <!-- Encabezado principal de la página -->
 
-<div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, 0, "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
-</div>
+@if (roles.Contains("Verificador") || roles.Contains("Validador"))
+{
+    <div class="mb-3">  
+        <button class="btn btn-primary" disabled>Crear Nuevo</button> 
+    </div>
+}
+else
+{
+    <div class="mb-3">  <!-- Contenedor con margen inferior (mb-3 es una clase de Bootstrap) -->
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(0, 0, "Create")'>Crear Nuevo</button>  <!-- Botón deshabilitado para crear nuevos productos -->
+    </div>
+}
+
 
 <!-- Bloque condicional que muestra un indicador de carga si los datos están cargando -->
 <!-- Si no está cargando pero no hay productos o la lista es nula, muestra un mensaje informativo -->
@@ -60,10 +72,19 @@ else
                         <td>@ObtenerNombreResponsable(tpFuenteIndi)</td>
                         <td>@ObtenerNombreIndicador(tpFuenteIndi)</td>
                         <td>@ObtenerValor(tpFuenteIndi, "fechaasignacion")</td>
-                        <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), Convert.ToInt32(tempResponsable), "Edit")'>Editar</button>
-                        </td>
-                        <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId), Convert.ToInt32(tempResponsable))">Eliminar</button></td>
+                        
+                         @if (!roles.Contains("Verificador")){
+                                
+                            <td>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick='() => AbrirModal(Convert.ToInt32(tempId), Convert.ToInt32(tempResponsable), "Edit")'>Editar</button>
+                            </td>
+
+                            @if (!roles.Contains("Validador"))
+                            {
+                                <td><button id="" class="btn btn-danger" @onclick="() => EliminarRegistro(Convert.ToInt32(tempId), Convert.ToInt32(tempResponsable))">Eliminar</button></td>
+                            }
+                        }
+                        
                     </tr>
                 }
             </tbody>
@@ -132,6 +153,9 @@ else
     private List<Dictionary<string, object>> responsablePorIndicador = new List<Dictionary<string, object>>();
     private List<Dictionary<string, object>> indicador = new List<Dictionary<string, object>>();
     private List<Dictionary<string, object>> responsable = new List<Dictionary<string, object>>();
+
+    // Lista para almacenar los roles obtenidos del sessionStorage
+    private List<string> roles = new List<string>();
     
     // Bandera para indicar si se están cargando los datos
     private bool cargando = true;
@@ -153,6 +177,19 @@ else
         await CargarResponsableInidicador();
         await CargarIndicador();
         await CargarResponsable();
+
+
+        var scriptRoles = @"
+                Object.keys(sessionStorage)
+                    .filter(key => key.startsWith('rolUsuario'))
+                    .map(key => sessionStorage.getItem(key))   
+            ";
+
+        // Ejecutar el script JavaScript para obtener los roles
+        roles = await JSRuntime.InvokeAsync<List<string>>(
+            "eval", 
+            scriptRoles
+        );
     }
 
     private async Task CargarResponsable(){
