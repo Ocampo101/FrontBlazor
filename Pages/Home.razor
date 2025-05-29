@@ -7,19 +7,36 @@
 <!-- Define el título que se mostrará en la pestaña del navegador cuando se visite la página de inicio -->
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, World!!</h1>
 <br>
 
  @if (string.IsNullOrEmpty(UserName))
 {
-    <h5>You need to log in to the application. Click to next button</h5>
-    <button class="btn btn-primary" @onclick="PageLogin">
-        Iniciar Sesión
-    </button>
+    @* <h5>You need to log in to the application. Click to next button</h5> *@
+    <div class="flex items-center justify-center h-screen bg-gray-50">
+        <div class="container d-flex flex-column justify-content-center align-items-center text-center">
+            
+            <h1 class="display-4 fw-bold text-primary">Bienvenido al Gestor de Indicadores</h1>
+            <p class="lead text-secondary">Administra, visualiza y toma decisiones con tus indicadores de forma efectiva.</p>
+
+            <img src="20943849.jpg" class="img-fluid mt-4" style="max-height: 300px;">
+            
+            <button class="btn btn-primary text-center" @onclick="PageLogin">
+                Iniciar Sesión
+            </button>
+        </div>
+    </div>
 }
 else
 {
-    <h4>Welcome <i><span style="color:red;">@UserName</span></i> to your new app</h4>
+
+    <div class="flex items-center justify-center h-screen bg-gray-50">
+        <div class="container d-flex flex-column justify-content-center align-items-center text-center">
+            <h1 class="display-4 fw-bold text-primary">Bienvenido al Gestor de Indicadores</h1>
+            <p class="lead text-secondary">Administra, visualiza y toma decisiones con tus indicadores de forma efectiva.</p>
+            <img src="20943849.jpg" class="img-fluid mt-4" style="max-height: 300px;">
+        </div>
+    </div>
+    <h4 class="text-center">Welcome <i><span style="color:red;">@UserName</span></i></h4>
 }
 
 

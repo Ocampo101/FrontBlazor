@@ -5,7 +5,7 @@
     <div class="container-fluid">
         <!-- navbar-brand: estilo para el logo/nombre de la aplicación -->
         <!-- href="": enlace a la página de inicio -->
-        <a class="navbar-brand" href="">FrontBlazor</a>
+        <a class="navbar-brand" href="">Gestión de Indicadores</a>
         
         <!-- Botón hamburguesa para mostrar/ocultar el menú en dispositivos móviles -->
         <!-- title: texto que aparece al pasar el cursor sobre el botón -->
@@ -37,31 +37,12 @@
                 <!-- aria-hidden="true": oculta el icono para lectores de pantalla -->
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
-        </div>
-        
-        <!-- Segunda opción de menú: Counter -->
-        @* <div class="nav-item px-3">
-            <!-- href="counter": enlace a la página de contador -->
-            <NavLink class="nav-link" href="counter">
-                <!-- Icono para la opción Counter (símbolo de más en un cuadrado) -->
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        
-        <!-- Tercera opción de menú: Weather -->
-        <div class="nav-item px-3">
-            <!-- href="weather": enlace a la página del clima -->
-            <NavLink class="nav-link" href="weather">
-                <!-- Icono para la opción Weather (lista anidada) -->
-                <!-- <i class="bi bi-file-earmark-person-fill"></i> -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div> *@
+        </div>       
 
         <!-- Agregar este bloque después de las opciones existentes -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="reportsIndicador">
-                <span class="bi bi-person-circle" aria-hidden="true"></span> Informes - Indicador
+                <span class="bi bi-clipboard-data nav-menu-item" aria-hidden="true"></span> Informes - Indicador
             </NavLink>
         </div>
 
@@ -69,61 +50,56 @@
         <hr style="color: white; height; 3px;"/>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tipoActor">
-                
-                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                        <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                    </svg>
-                Tipo Actor
+            <NavLink class="nav-link" href="tipoActor">                                    
+                <span class="bi bi-person-circle nav-menu-item" aria-hidden="true"></span>Tipo Actor
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="indicador">
-                <span class="bi bi-person-circle" aria-hidden="true"></span> Indicador
+                <span class="bi bi-app-indicator nav-menu-item" aria-hidden="true"></span> Indicador
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="tipoIndicador">
-                <span class="bi bi-person-circle" aria-hidden="true"></span> Tipo Indicador
+                <span class="bi bi-app-indicator nav-menu-item" aria-hidden="true"></span> Tipo Indicador
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="unidadMedicion">
-                <span class="bi bi-box" aria-hidden="true"></span> Unidad de Medición
+                <span class="bi bi-speedometer nav-menu-item" aria-hidden="true"></span> Unidad de Medición
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="sentido">
-                <span class="bi bi-box" aria-hidden="true"></span> Sentido
+                <span class="bi bi-compass nav-menu-item" aria-hidden="true"></span> Sentido
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="repreVisual">
-                <span class="bi bi-box" aria-hidden="true"></span> Repre Visual
+                <span class="bi bi-bar-chart-steps nav-menu-item" aria-hidden="true"></span> Repre Visual
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="fuente">
-                <span class="bi bi-box" aria-hidden="true"></span> Fuente
+                <span class="bi bi-file-earmark-font nav-menu-item" aria-hidden="true"></span> Fuente
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="usuario">
-                <span class="bi bi-box" aria-hidden="true"></span> Usuarios
+                <span class="bi bi-person-circle nav-menu-item" aria-hidden="true"></span> Usuarios
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="rol">
-                <span class="bi bi-box" aria-hidden="true"></span> Roles
+                <span class="bi bi-person-rolodex nav-menu-item" aria-hidden="true"></span> Roles
             </NavLink>
         </div>
         
@@ -132,88 +108,89 @@
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="rolUsuario">
-                <span class="bi bi-box" aria-hidden="true"></span> Rol Usuario 
+                <span class="bi bi-person-rolodex nav-menu-item" aria-hidden="true"></span> Rol Usuario 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="actor">
-                <span class="bi bi-box" aria-hidden="true"></span> Actor
+                <span class="bi bi-person-circle nav-menu-item" aria-hidden="true"></span> Actor
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="responsablePorIndicador">
-                <span class="bi bi-box" aria-hidden="true"></span> Resp Indicador 
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Resp Indicador 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="repreVisualPorIndicador">
-                <span class="bi bi-box" aria-hidden="true"></span> Repre Visual Indicador 
+            <NavLink class="nav-link" style="display: -webkit-inline-box !important;" href="repreVisualPorIndicador">
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Repre Visual Indicador 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="fuentePorIndicador">
-                <span class="bi bi-box" aria-hidden="true"></span> Fuente Indicador 
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Fuente Indicador 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="resultadoIndicador">
-                <span class="bi bi-box" aria-hidden="true"></span> Resultado Indicador
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Resultado Indicador
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="variablePorIndicador">
-                <span class="bi bi-box" aria-hidden="true"></span> Variable Indicador 
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Variable Indicador 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="variable">
-                <span class="bi bi-box" aria-hidden="true"></span> Variable 
+                <span class="bi bi-boxes nav-menu-item" aria-hidden="true"></span> Variable 
             </NavLink>
         </div>
+
 
         <!-- Separador de secciones-->
         <hr style="color: white; height; 3px;"/>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="articulo">
-                <span class="bi bi-box" aria-hidden="true"></span> Artículo 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Artículo 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="paragrafo">
-                <span class="bi bi-box" aria-hidden="true"></span> Parágrafo 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Parágrafo 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="seccion">
-                <span class="bi bi-box" aria-hidden="true"></span> Sección 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Sección 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="subseccion">
-                <span class="bi bi-box" aria-hidden="true"></span> Subsección 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Subsección 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="literal">
-                <span class="bi bi-box" aria-hidden="true"></span> Literal 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Literal 
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="numeral">
-                <span class="bi bi-box" aria-hidden="true"></span> Numeral 
+                <span class="bi bi-blockquote-right nav-menu-item" aria-hidden="true"></span> Numeral 
             </NavLink>
         </div>
 

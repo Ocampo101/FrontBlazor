@@ -14,7 +14,7 @@ main {
 /* Define el estilo para la barra lateral (sidebar) */
 /* Usa un degradado de color vertical que va de azul oscuro a morado */
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #064746 70%);
 }
 
 /* Define el estilo para la fila superior de la página */
